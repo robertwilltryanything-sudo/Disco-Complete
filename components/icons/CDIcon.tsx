@@ -12,14 +12,14 @@ export const CDIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     {...props}
   >
     <defs>
-      <conicGradient id="cd-rainbow-sheen" from="45deg" at="50% 50%">
+      <linearGradient id="cd-rainbow-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="rgba(255, 0, 255, 0.2)" />
         <stop offset="20%" stopColor="rgba(0, 0, 255, 0.2)" />
         <stop offset="40%" stopColor="rgba(0, 255, 255, 0.2)" />
         <stop offset="60%" stopColor="rgba(0, 255, 0, 0.2)" />
         <stop offset="80%" stopColor="rgba(255, 255, 0, 0.2)" />
         <stop offset="100%" stopColor="rgba(255, 0, 0, 0.2)" />
-      </conicGradient>
+      </linearGradient>
     </defs>
     
     {/* Base grey disc */}
