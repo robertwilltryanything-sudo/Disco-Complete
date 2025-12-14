@@ -1,0 +1,62 @@
+
+
+export type MediaType = 'cd' | 'vinyl';
+
+export interface Track {
+  number: number;
+  title: string;
+  duration?: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  artist: string;
+  title:string;
+  mediaType: MediaType;
+  genre?: string;
+  year?: number;
+  coverArtUrl?: string;
+  notes?: string;
+  version?: string;
+  recordLabel?: string;
+  tags?: string[];
+  tracklist?: Track[];
+  user_id?: string;
+  created_at?: string;
+}
+
+export interface WantlistItem {
+  id: string;
+  artist: string;
+  title: string;
+  mediaType: MediaType;
+  genre?: string;
+  year?: number;
+  coverArtUrl?: string;
+  notes?: string;
+  version?: string;
+  recordLabel?: string;
+  tags?: string[];
+  tracklist?: Track[];
+  user_id?: string;
+  created_at?: string;
+}
+
+export interface CollectionData {
+  collection: CollectionItem[];
+  lastUpdated: string | null;
+}
+
+export type SortKey = 'artist' | 'title' | 'year' | 'genre' | 'recordLabel' | 'created_at';
+export type SortOrder = 'asc' | 'desc';
+
+export type SyncStatus = 'idle' | 'loading' | 'saving' | 'synced' | 'error' | 'disabled' | 'authenticating';
+
+export type SyncProvider = 'supabase' | 'none';
+
+export type SyncMode = 'realtime' | 'manual';
+
+export interface DiscographyAlbum {
+  title: string;
+  year: number;
+}

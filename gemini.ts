@@ -1,0 +1,264 @@
+
+
+import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
+import { CollectionItem, DiscographyAlbum, Track } from './types';
+
+// The API key is sourced from the environment variables via Vite's `define` config.
+const apiKey = process.env.API_KEY;
+let ai: GoogleGenAI | null = null;
+
+// Initialize the AI client only if the API key is provided.
+// This prevents the app from crashing on start-up if the key is missing.
+if (apiKey) {
+  try {
+    ai = new GoogleGenAI({ apiKey });
+  } catch (error) {
+    console.error("Failed to initialize GoogleGenAI, AI features will be disabled.", error);
+    ai = null; // Ensure ai is null on failure
+  }
+} else {
+  // This warning is helpful for developers.
+  console.warn("VITE_API_KEY is not configured in the environment. AI-powered features like album scanning and detail fetching will be disabled.");
+}
+
+const tracklistSchema = {
+    type: Type.ARRAY,
+    items: {
+        type: Type.OBJECT,
+        properties: {
+            number: { type: Type.INTEGER, description: "The track number." },
+            title: { type: Type.STRING, description: "The track title." },
+            duration: { type: Type.STRING, description: "The track duration in MM:SS format, if available." }
+        },
+        required: ["number", "title"]
+    },
+    description: "An array of tracks on the album."
+};
+
+
+const albumInfoSchema = {
+    type: Type.OBJECT,
+    properties: {
+        artist: {
+            type: Type.STRING,
+            description: "The name of the artist or band.",
+        },
+        title: {
+            type: Type.STRING,
+            description: "The title of the album.",
+        },
+        genre: {
+            type: Type.STRING,
+            description: "The primary genre of the album.",
+        },
+        year: {
+            type: Type.INTEGER,
+            description: "The year the album was originally released.",
+        },
+        version: {
+            type: Type.STRING,
+            description: "The specific version of the album if it is mentioned on the cover, such as 'Remastered' or 'Deluxe Edition'."
+        },
+        recordLabel: {
+            type: Type.STRING,
+            description: "The record label that released the album, if visible or known.",
+        },
+        tags: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "An array of relevant tags for the album, such as sub-genres, musical styles, or notable facts.",
+        },
+        coverArtUrl: {
+            type: Type.STRING,
+            description: "A publicly accessible URL for the high-quality album cover art."
+        },
+        tracklist: tracklistSchema
+    },
+    required: ["artist", "title"],
+};
+
+const albumDetailsSchema = {
+    type: Type.OBJECT,
+    properties: {
+        genre: {
+            type: Type.STRING,
+            description: "The primary genre of the album (e.g., 'Rock', 'Grunge', 'Alternative Rock').",
+        },
+        year: {
+            type: Type.INTEGER,
+            description: "The 4-digit year the album was originally released.",
+        },
+        recordLabel: {
+            type: Type.STRING,
+            description: "The original record label for the album.",
+        },
+        tags: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "An array of 2-3 relevant tags for the album, such as sub-genres, musical styles, or notable facts.",
+        },
+        tracklist: tracklistSchema,
+    },
+};
+
+const discographySchema = {
+    type: Type.ARRAY,
+    items: {
+        type: Type.OBJECT,
+        properties: {
+            title: {
+                type: Type.STRING,
+                description: "The title of the studio album.",
+            },
+            year: {
+                type: Type.INTEGER,
+                description: "The four-digit year the album was originally released.",
+            },
+        },
+        required: ["title", "year"],
+    },
+};
+
+export async function getArtistDiscography(artistName: string): Promise<DiscographyAlbum[] | null> {
+    // Gracefully disable the feature if the AI client isn't available.
+    if (!ai) return Promise.resolve(null);
+
+    try {
+        const prompt = `Provide a list of official studio albums for the artist "${artistName}". For each album, include its title and original release year. Do not include live albums, compilations, or EPs. Respond in JSON format.`;
+        
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: discographySchema,
+            },
+        });
+        
+        const text = response.text;
+        if (!text) {
+            console.warn(`Gemini response for discography of "${artistName}" was empty.`);
+            return null;
+        }
+
+        const jsonString = text.trim();
+        const discographyData = JSON.parse(jsonString);
+        return discographyData as DiscographyAlbum[];
+
+    } catch (error) {
+        console.error(`Error fetching discography for "${artistName}" with Gemini:`, error);
+        return null;
+    }
+}
+
+
+export async function getAlbumTrivia(artist: string, title: string): Promise<string | null> {
+    // Gracefully disable the feature if the AI client isn't available.
+    if (!ai) return Promise.resolve(null);
+
+    try {
+        const prompt = `Provide one interesting and brief piece of trivia about the album "${title}" by "${artist}". Respond with only a single, concise sentence.`;
+        
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        
+        const text = response.text;
+        if (!text) {
+            console.warn(`Gemini response for trivia for "${artist} - ${title}" was empty.`);
+            return null;
+        }
+
+        return text.trim();
+
+    } catch (error) {
+        console.error(`Error fetching trivia for "${artist} - ${title}" with Gemini:`, error);
+        return null;
+    }
+}
+
+export async function getAlbumDetails(artist: string, title: string): Promise<{ genre?: string; year?: number; recordLabel?: string; tags?: string[], tracklist?: Track[] } | null> {
+    // Gracefully disable the feature if the AI client isn't available.
+    if (!ai) return Promise.resolve(null);
+
+    try {
+        const textPart = {
+            text: `For the album "${title}" by "${artist}", provide the original release year, the primary genre, the original record label, an array of 2-3 relevant tags, and the full tracklist including track number, title, and duration. Respond in JSON format. If you cannot find the information, respond with an empty object.`,
+        };
+        
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [textPart] },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: albumDetailsSchema,
+            },
+        });
+        
+        const text = response.text;
+        if (!text) {
+            console.warn(`Gemini response for album details for "${artist} - ${title}" was empty.`);
+            return null;
+        }
+
+        const jsonString = text.trim();
+        // It's possible for Gemini to return an empty string for the JSON, which is invalid.
+        // We'll handle this case gracefully.
+        if (jsonString === '') {
+            return {};
+        }
+
+        const detailsData = JSON.parse(jsonString);
+        return detailsData;
+
+    } catch (error) {
+        console.error(`Error fetching details for "${artist} - ${title}" with Gemini:`, error);
+        return null;
+    }
+}
+
+
+export async function getAlbumInfo(base64Image: string): Promise<Partial<Omit<CollectionItem, 'id'>> | null> {
+    // Gracefully disable the feature if the AI client isn't available.
+    if (!ai) return Promise.resolve(null);
+
+    try {
+        const imagePart = {
+            inlineData: {
+                mimeType: 'image/jpeg',
+                data: base64Image,
+            },
+        };
+        const textPart = {
+            text: "Identify the album from this cover art. Provide the artist, title, genre, release year, record label, some descriptive tags, and tracklist. Respond in JSON format. If you cannot identify the album, respond with an empty object.",
+        };
+        
+        // FIX: Changed model to 'gemini-2.5-flash-image' for multimodal input.
+        // FIX: Removed responseMimeType and responseSchema as they are not supported by image models.
+        const response: GenerateContentResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: { parts: [imagePart, textPart] },
+        });
+        
+        const text = response.text;
+        if (!text) {
+            console.warn('Gemini response for album scan was empty.');
+            return null;
+        }
+
+        const jsonString = text.trim();
+        const albumData = JSON.parse(jsonString);
+        
+        // Return null if the album is not identified (empty object)
+        if (Object.keys(albumData).length === 0) {
+            return null;
+        }
+
+        return albumData;
+
+    } catch (error) {
+        console.error("Error identifying album with Gemini:", error);
+        return null;
+    }
+}

@@ -1,0 +1,43 @@
+import React from 'react';
+import { CollectionItem } from '../types';
+import CollectionTableRow from './CollectionTableRow';
+
+interface CollectionTableProps {
+  collection: CollectionItem[];
+  onRequestEdit: (item: CollectionItem) => void;
+}
+
+const CollectionTable: React.FC<CollectionTableProps> = ({ collection, onRequestEdit }) => {
+  if (collection.length === 0) {
+    return (
+      <div className="text-center py-10 px-4 bg-zinc-50 rounded-lg border border-dashed border-zinc-300">
+        <p className="text-zinc-600">No items found in your collection.</p>
+        <p className="text-sm text-zinc-500 mt-1">Try changing your search or adding a new item!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="md:bg-white md:rounded-lg md:border md:border-zinc-200 md:overflow-hidden">
+      <table className="w-full text-left">
+        <thead className="hidden md:table-header-group bg-zinc-50/75 border-b border-zinc-200 text-sm font-semibold text-zinc-600 uppercase tracking-wider">
+          <tr>
+            <th className="p-3 w-16" aria-label="Cover Art"></th>
+            <th className="p-3">Title</th>
+            <th className="p-3">Artist</th>
+            <th className="p-3">Genre</th>
+            <th className="p-3">Year</th>
+            <th className="p-3 w-20" aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody className="block md:table-row-group">
+          {collection.map(item => (
+            <CollectionTableRow key={item.id} item={item} onRequestEdit={onRequestEdit} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default React.memo(CollectionTable);
