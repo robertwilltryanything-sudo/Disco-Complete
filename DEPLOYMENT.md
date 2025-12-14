@@ -38,17 +38,36 @@ With these settings, Vercel will automatically use the correct versions of Node.
 1.  From your Vercel dashboard, click "**Add New...**" and select "**Project**".
 2.  Find your **DiscO** GitHub repository and click "**Import**".
 
-### Step 3: Configure Your Project
+### Step 3: Configure Environment Variables
 
-Vercel automatically detects that you're using Vite. You only need to add your environment variables.
+Vercel will detect that you are using Vite. You just need to provide the keys for the features you want to use.
 
-#### Add Environment Variables
-Expand the **Environment Variables** section in Vercel and add your secret keys:
+1.  On the "Configure Project" screen, expand the **Environment Variables** section.
+2.  Add the following keys based on your needs.
 
--   **Key:** `VITE_API_KEY`
--   **Value:** *Your Google Gemini API Key*
+#### A. Required: AI Features (Gemini)
+To enable AI scanning and trivia:
+1.  Get a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2.  Add it to Vercel:
+    *   **Key:** `VITE_API_KEY`
+    *   **Value:** `Your_Gemini_API_Key_Here`
 
-The install command is handled by the `vercel.json` file in the repository.
+#### B. Optional: Real-time Database (Supabase)
+To enable cross-device sync via Supabase:
+1.  Create a project at [Supabase](https://supabase.com/).
+2.  Go to **Project Settings > API**.
+3.  Add to Vercel:
+    *   **Key:** `VITE_SUPABASE_URL`
+    *   **Value:** `Your_Project_URL`
+    *   **Key:** `VITE_SUPABASE_ANON_KEY`
+    *   **Value:** `Your_anon_public_Key`
+
+#### C. Optional: Google Drive Sync
+To enable Google Drive backup:
+1.  Create a Client ID in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2.  Add to Vercel:
+    *   **Key:** `VITE_GOOGLE_CLIENT_ID`
+    *   **Value:** `Your_Client_ID`
 
 ### Step 4: Deploy!
 
@@ -56,4 +75,4 @@ The install command is handled by the `vercel.json` file in the repository.
 2.  Vercel will build and deploy your project.
 3.  Once finished, you will get a live URL (e.g., `disco-app.vercel.app`).
 
-Your application is now live! Every time you push changes to your main branch on GitHub, Vercel will automatically deploy the update.
+**Note:** If you added optional variables (Supabase/Google Drive) *after* the initial deployment, you must go to the **Deployments** tab in Vercel and "Redeploy" for them to take effect.
