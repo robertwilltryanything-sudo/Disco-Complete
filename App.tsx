@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CollectionItem, CollectionData, SyncProvider, SyncStatus, SyncMode, WantlistItem, MediaType } from './types';
@@ -31,6 +30,7 @@ import { useSimpleSync } from './hooks/useSimpleSync';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
 import SyncConflictModal from './components/SyncConflictModal';
 import ScrollToTop from './components/ScrollToTop';
+import FloatingActionButton from './components/FloatingActionButton';
 
 const INITIAL_CDS: CollectionItem[] = [
   {
@@ -389,7 +389,7 @@ const AppContent: React.FC = () => {
   const isOnWantlistPage = location.pathname.startsWith('/wantlist');
   
   return (
-    <div className="bg-zinc-100 min-h-screen font-sans pb-16 md:pb-0">
+    <div className="bg-zinc-100 min-h-screen font-sans pb-24 md:pb-0">
       <Header
         onAddClick={() => isOnWantlistPage ? setIsAddWantlistModalOpen(true) : setIsAddModalOpen(true)}
         collectionCount={collection.length}
@@ -425,6 +425,7 @@ const AppContent: React.FC = () => {
       </main>
       
       <BottomNavBar />
+      <FloatingActionButton onClick={() => isOnWantlistPage ? setIsAddWantlistModalOpen(true) : setIsAddModalOpen(true)} />
 
       {(isAddModalOpen || itemToEdit || prefillData) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-30 flex justify-center items-start p-4 overflow-y-auto">
