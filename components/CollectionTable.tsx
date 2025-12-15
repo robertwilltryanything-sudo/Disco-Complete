@@ -1,6 +1,6 @@
 import React from 'react';
 import { CollectionItem } from '../types';
-import CollectionTableRow from './CollectionTableRow';
+import CollectionTableRow from './CDTableRow';
 
 interface CollectionTableProps {
   collection: CollectionItem[];
