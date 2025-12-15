@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CollectionItem, CollectionData, SyncProvider, SyncStatus, SyncMode, WantlistItem, MediaType } from './types';
 import Header from './components/Header';
@@ -13,24 +14,19 @@ import { XIcon } from './components/icons/XIcon';
 import ConfirmDuplicateModal from './components/ConfirmDuplicateModal';
 // FIX: Removed getBestCD as it is not exported from utils.
 import { areStringsSimilar } from './utils';
-import { useDebounce } from './hooks/useDebounce';
 import ImportConfirmModal from './components/ImportConfirmModal';
-import { XCircleIcon } from './components/icons/XCircleIcon';
 import BottomNavBar from './components/BottomNavBar';
 import SyncSettingsModal from './components/SyncSettingsModal';
 import SupabaseNotConfigured from './components/SupabaseNotConfigured';
 import SupabaseAuth from './components/SupabaseAuth';
 import DuplicatesView from './views/DuplicatesView';
 import WantlistView from './views/WantlistView';
-import { PlusIcon } from './components/icons/PlusIcon';
 import AddWantlistItemForm from './components/AddWantlistItemForm';
 import WantlistDetailView from './views/WantlistDetailView';
 import ArtistDetailView from './views/ArtistDetailView';
-import { useSimpleSync } from './hooks/useSimpleSync';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
 import SyncConflictModal from './components/SyncConflictModal';
 import ScrollToTop from './components/ScrollToTop';
-import FloatingActionButton from './components/FloatingActionButton';
 
 const INITIAL_CDS: CollectionItem[] = [
   {
@@ -132,7 +128,6 @@ const AppContent: React.FC = () => {
 
   // Sync Hooks
   const supabaseSync = useSupabaseSync(setCollection, setWantlist, syncMode, syncProvider);
-  const simpleSync = useSimpleSync();
   const googleDriveSync = useGoogleDrive();
 
   // Persist local changes
@@ -158,7 +153,7 @@ const AppContent: React.FC = () => {
   if (syncProvider === 'supabase') {
       currentSyncStatus = supabaseSync.syncStatus;
       currentSyncError = supabaseSync.error;
-  } else if (syncProvider === 'google_drive') { // Placeholder if implemented
+  } else if (syncProvider === 'google_drive') {
        currentSyncStatus = googleDriveSync.syncStatus;
        currentSyncError = googleDriveSync.error;
   }
@@ -389,7 +384,7 @@ const AppContent: React.FC = () => {
   const isOnWantlistPage = location.pathname.startsWith('/wantlist');
   
   return (
-    <div className="bg-zinc-100 min-h-screen font-sans pb-24 md:pb-0">
+    <div className="bg-zinc-100 min-h-screen font-sans pb-16 md:pb-0">
       <Header
         onAddClick={() => isOnWantlistPage ? setIsAddWantlistModalOpen(true) : setIsAddModalOpen(true)}
         collectionCount={collection.length}
@@ -425,7 +420,6 @@ const AppContent: React.FC = () => {
       </main>
       
       <BottomNavBar />
-      <FloatingActionButton onClick={() => isOnWantlistPage ? setIsAddWantlistModalOpen(true) : setIsAddModalOpen(true)} />
 
       {(isAddModalOpen || itemToEdit || prefillData) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-30 flex justify-center items-start p-4 overflow-y-auto">
